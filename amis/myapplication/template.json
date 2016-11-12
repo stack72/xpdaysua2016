@@ -1,0 +1,40 @@
+{
+    "variables": {
+        "source_ami": "",
+        "region": ""
+    },
+    "builders": [{
+        "type": "amazon-ebs",
+        "region": "{{user `region`}}",
+        "source_ami": "{{user `source_ami`}}",
+        "ssh_pty": true,
+        "instance_type": "t2.micro",
+        "ssh_username": "ec2-user",
+        "ssh_timeout": "5m",
+        "associate_public_ip_address": true,
+        "ami_virtualization_type": "hvm",
+        "ami_description": "My Custom Application Image",
+        "ami_name": "ndcoslo-{{isotime \"2006-01-02-1504\"}}"
+    }],
+    "provisioners": [
+        {
+            "type": "shell",
+            "start_retry_timeout": "10m",
+            "inline": [
+                "echo \"yum update -y aws-amitools-ec2\" | sudo tee -a /etc/rc.local",
+                "sudo yum update -y",
+                "sudo yum install -y ntp",
+                "sudo yum install -y nginx"
+            ]
+        },
+        {
+          "type": "file",
+          "source": "tests",
+          "destination": "/tmp"
+        },
+        {
+        "type": "shell",
+        "script": "serverspec.sh"
+      }
+    ]
+}
